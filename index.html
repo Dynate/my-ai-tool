@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Studio - Create Images & Videos</title>
+    <script src="https://js.puter.com/v2/"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background-color: #f4f4f9; max-width: 800px; margin: 0 auto; }
+        
+        /* ADVERTISEMENT SLOTS */
+        .ad-banner { width: 100%; height: 90px; background: #e0e0e0; margin: 15px 0; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; }
+
+        .container { background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* TABS */
+        .tabs { display: flex; justify-content: center; margin-bottom: 20px; border-bottom: 2px solid #eee; }
+        .tab-btn { background: none; border: none; padding: 12px 25px; cursor: pointer; font-size: 16px; font-weight: bold; color: #555; }
+        .tab-btn.active { color: #007bff; border-bottom: 3px solid #007bff; }
+        
+        /* INPUTS */
+        .input-group { text-align: left; margin-bottom: 15px; }
+        label { display: block; font-weight: bold; margin-bottom: 5px; font-size: 14px; color: #333; }
+        input[type="text"] { width: 100%; padding: 12px; font-size: 16px; border: 2px solid #ddd; border-radius: 8px; box-sizing: border-box; }
+        
+        /* FILE UPLOAD STYLE */
+        .file-upload { border: 2px dashed #007bff; padding: 15px; border-radius: 8px; text-align: center; background: #f0f8ff; cursor: pointer; margin-bottom: 15px; }
+        .file-upload:hover { background: #e1f0ff; }
+        input[type="file"] { display: none; }
+        .file-status { font-size: 13px; color: #007bff; margin-top: 5px; font-weight: bold; }
+
+        /* BUTTON */
+        .generate-btn { width: 100%; padding: 15px; font-size: 18px; background-color: #007bff; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .generate-btn:hover { background-color: #0056b3; }
+        .generate-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* OUTPUT */
+        .output-area { margin-top: 20px; min-height: 100px; }
+        img, video { max-width: 100%; border-radius: 8px; margin-top: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .hidden { display: none; }
+        .loading { color: #007bff; font-weight: bold; animation: pulse 1.5s infinite; }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+    </style>
+</head>
+<body>
+
+    <div class="ad-banner">[Ad Space - Top Banner]</div>
+
+    <div class="container">
+        <h1>✨ Piu AI Creative Studio</h1>
+        
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('image')">Image Generator</button>
+            <button class="tab-btn" onclick="switchTab('video')">Video Generator</button>
+        </div>
+
+        <div id="image-section">
+            <div class="input-group">
+                <label>1. Describe your image:</label>
+                <input type="text" id="imgPrompt" placeholder="E.g., An astronaut riding a horse on Mars...">
+            </div>
+            
+            <div class="input-group">
+                <label>2. (Optional) Upload Reference Image:</label>
+                <div class="file-upload" onclick="document.getElementById('imgUpload').click()">
+                    📂 Click to Upload Image
+                    <input type="file" id="imgUpload" accept="image/*" onchange="showFileName('imgUpload', 'imgFileStatus')">
+                    <div id="imgFileStatus" class="file-status">No file chosen</div>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generateImage()" id="imgBtn">Generate Image</button>
+            <div id="img-result" class="output-area"></div>
+        </div>
+
+        <div id="video-section" class="hidden">
+            <div class="input-group">
+                <label>1. Describe the video action:</label>
+                <input type="text" id="vidPrompt" placeholder="E.g., The clouds are moving rapidly...">
+            </div>
+
+            <div class="input-group">
+                <label>2. (Optional) Start with an Image:</label>
+                <div class="file-upload" onclick="document.getElementById('vidUpload').click()">
+                    📂 Click to Upload Image
+                    <input type="file" id="vidUpload" accept="image/*" onchange="showFileName('vidUpload', 'vidFileStatus')">
+                    <div id="vidFileStatus" class="file-status">No file chosen</div>
+                </div>
+            </div>
+
+            <button class="generate-btn" onclick="generateVideo()" id="vidBtn">Generate Video</button>
+            <div id="vid-result" class="output-area"></div>
+        </div>
+    </div>
+
+    <div class="ad-banner">[Ad Space - Bottom Banner]</div>
+
+    <script>
+        // --- UTILITY FUNCTIONS ---
+        function switchTab(type) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            document.getElementById('image-section').classList.add('hidden');
+            document.getElementById('video-section').classList.add('hidden');
+            if (type === 'image') {
+                document.querySelector('.tab-btn:nth-child(1)').classList.add('active');
+                document.getElementById('image-section').classList.remove('hidden');
+            } else {
+                document.querySelector('.tab-btn:nth-child(2)').classList.add('active');
+                document.getElementById('video-section').classList.remove('hidden');
+            }
+        }
+
+        function showFileName(inputId, statusId) {
+            const file = document.getElementById(inputId).files[0];
+            if(file) document.getElementById(statusId).innerText = "✅ Selected: " + file.name;
+        }
+
+        // Helper: Convert File to Base64 so AI can read it
+        const toBase64 = file => new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.readAsDataURL(file);
+            reader.onload = () => resolve(reader.result);
+            reader.onerror = error => reject(error);
+        });
+
+        // --- IMAGE GENERATION ---
+        async function generateImage() {
+            const prompt = document.getElementById('imgPrompt').value;
+            const fileInput = document.getElementById('imgUpload');
+            const resultDiv = document.getElementById('img-result');
+            const btn = document.getElementById('imgBtn');
+
+            if (!prompt) return alert("Please enter a text description!");
+
+            btn.disabled = true;
+            btn.innerText = "Generating...";
+            resultDiv.innerHTML = '<p class="loading">🎨 Painting... (Please wait 10-20s)</p>';
+
+            try {
+                let options = {};
+                // If user uploaded a file, add it to options
+                if (fileInput.files.length > 0) {
+                    const base64Img = await toBase64(fileInput.files[0]);
+                    options.input_image = base64Img; // Specific Puter parameter for Img2Img
+                }
+
+                // Call Puter API
+                const image = await puter.ai.txt2img(prompt, options);
+                
+                resultDiv.innerHTML = '';
+                resultDiv.appendChild(image);
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+            }
+            btn.disabled = false;
+            btn.innerText = "Generate Image";
+        }
+
+        // --- VIDEO GENERATION ---
+        async function generateVideo() {
+            const prompt = document.getElementById('vidPrompt').value;
+            const fileInput = document.getElementById('vidUpload');
+            const resultDiv = document.getElementById('vid-result');
+            const btn = document.getElementById('vidBtn');
+
+            if (!prompt) return alert("Please enter a text description!");
+
+            btn.disabled = true;
+            btn.innerText = "Generating Video...";
+            resultDiv.innerHTML = '<p class="loading">🎥 Rendering Video... (This takes 60-90s)</p>';
+
+            try {
+                let options = {};
+                // If user uploaded a file, add it to options
+                if (fileInput.files.length > 0) {
+                    const base64Img = await toBase64(fileInput.files[0]);
+                    options.image = base64Img; // Puter video models often use 'image' or 'input_image'
+                }
+
+                const video = await puter.ai.txt2vid(prompt, options);
+                
+                resultDiv.innerHTML = '';
+                video.controls = true;
+                resultDiv.appendChild(video);
+            } catch (err) {
+                console.error(err);
+                resultDiv.innerHTML = '<p style="color:red">Error: ' + err.message + '</p>';
+            }
+            btn.disabled = false;
+            btn.innerText = "Generate Video";
+        }
+    </script>
+</body>
+</html>
