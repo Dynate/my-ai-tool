@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI Studio Pro - Free Generator</title>
+    <title>AI Studio Pro - High Quality Generator</title>
     <script src="https://js.puter.com/v2/"></script>
     <style>
         body { font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; background-color: #f0f2f5; max-width: 800px; margin: 0 auto; color: #333; }
@@ -12,6 +12,9 @@
         .ad-banner { width: 100%; height: 90px; background: #e0e0e0; margin: 20px 0; border: 1px dashed #999; display: flex; align-items: center; justify-content: center; color: #666; font-size: 14px; border-radius: 8px; }
 
         .container { background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        
+        /* STYLE SELECTOR (GLOBAL) */
+        .style-box { background: #eef2f7; padding: 15px; border-radius: 10px; margin-bottom: 20px; text-align: left; border: 1px solid #dce4ec; }
         
         /* TABS */
         .tabs { display: flex; justify-content: center; margin-bottom: 25px; border-bottom: 2px solid #eee; }
@@ -50,6 +53,18 @@
 
     <div class="container">
         <h1>✨ AI Creative Studio</h1>
+
+        <div class="style-box">
+            <label>🎨 Choose Art Style (Improves Quality!):</label>
+            <select id="globalStyle">
+                <option value="">No Style (Raw)</option>
+                <option value=", hyper realistic, 8k, highly detailed, cinematic lighting, professional photography, hdr, 4k texture">📸 Realistic Photo (Best for People)</option>
+                <option value=", anime style, studio ghibli, vibrant colors, highly detailed, 4k">🎌 Anime / Cartoon</option>
+                <option value=", 3d render, unreal engine 5, octane render, pixar style, 8k, ray tracing">🧊 3D Animation / Pixar</option>
+                <option value=", cyberpunk, neon lights, futuristic, highly detailed, blade runner style">🤖 Cyberpunk / Sci-Fi</option>
+                <option value=", cinematic movie shot, imax quality, dramatic lighting, detailed background, 8k">🎥 Movie / Cinematic (Best for Video)</option>
+            </select>
+        </div>
         
         <div class="tabs">
             <button class="tab-btn active" onclick="switchTab('image')">Image Generator</button>
@@ -59,25 +74,13 @@
         <div id="image-section">
             <div class="input-group">
                 <label>1. Describe your image:</label>
-                <input type="text" id="imgPrompt" placeholder="E.g., A futuristic cyberpunk city at night...">
-            </div>
-
-            <div class="input-group">
-                <label>2. Choose Style (This improves quality!):</label>
-                <select id="imgStyle">
-                    <option value="">No Style (Raw)</option>
-                    <option value=", hyper realistic, 8k, highly detailed, professional photography, cinematic lighting, hdr">📸 Realistic Photo (Best)</option>
-                    <option value=", anime style, studio ghibli, vibrant colors, highly detailed">🎌 Anime / Cartoon</option>
-                    <option value=", 3d render, unreal engine 5, octane render, pixar style, 8k">🧊 3D Animation / Pixar</option>
-                    <option value=", cyberpunk, neon lights, futuristic, highly detailed">🤖 Cyberpunk / Sci-Fi</option>
-                    <option value=", oil painting, van gogh style, artistic, masterpiece">🎨 Digital Art / Painting</option>
-                </select>
+                <input type="text" id="imgPrompt" placeholder="E.g., An astronaut riding a horse on Mars...">
             </div>
             
             <div class="input-group">
-                <label>3. (Optional) Upload Reference Image:</label>
+                <label>2. (Optional) Upload Reference Image:</label>
                 <div class="file-upload" onclick="document.getElementById('imgUpload').click()">
-                    📂 Upload an Image
+                    📂 Upload Image
                     <input type="file" id="imgUpload" accept="image/*" onchange="showFileName('imgUpload', 'imgFileStatus')">
                     <div id="imgFileStatus" class="file-status">No file chosen</div>
                 </div>
@@ -98,7 +101,7 @@
             <div class="input-group">
                 <label>2. (Optional) Start with an Image:</label>
                 <div class="file-upload" onclick="document.getElementById('vidUpload').click()">
-                    📂 Upload an Image
+                    📂 Upload Image
                     <input type="file" id="vidUpload" accept="image/*" onchange="showFileName('vidUpload', 'vidFileStatus')">
                     <div id="vidFileStatus" class="file-status">No file chosen</div>
                 </div>
@@ -139,16 +142,17 @@
             reader.onerror = error => reject(error);
         });
 
+        // --- IMPROVED IMAGE GENERATOR ---
         async function generateImage() {
             let prompt = document.getElementById('imgPrompt').value;
-            const style = document.getElementById('imgStyle').value;
+            const style = document.getElementById('globalStyle').value; // Reads the global style
             const fileInput = document.getElementById('imgUpload');
             const resultDiv = document.getElementById('img-result');
             const btn = document.getElementById('imgBtn');
 
             if (!prompt) return alert("Please enter a text description!");
 
-            // Combine user prompt with style keywords automatically
+            // Automatically adds style keywords to prompt
             prompt = prompt + style;
 
             btn.disabled = true;
@@ -172,17 +176,22 @@
             btn.innerText = "Generate Image";
         }
 
+        // --- IMPROVED VIDEO GENERATOR ---
         async function generateVideo() {
-            const prompt = document.getElementById('vidPrompt').value;
+            let prompt = document.getElementById('vidPrompt').value;
+            const style = document.getElementById('globalStyle').value; // Reads the SAME global style
             const fileInput = document.getElementById('vidUpload');
             const resultDiv = document.getElementById('vid-result');
             const btn = document.getElementById('vidBtn');
 
             if (!prompt) return alert("Please enter a text description!");
 
+            // Automatically adds style keywords to video prompt too!
+            prompt = prompt + style;
+
             btn.disabled = true;
             btn.innerText = "Generating Video...";
-            resultDiv.innerHTML = '<p class="loading">🎥 Rendering Video... (Wait 60-90s)</p>';
+            resultDiv.innerHTML = '<p class="loading">🎥 Rendering High-Quality Video... (Wait 60-90s)</p>';
 
             try {
                 let options = {};
